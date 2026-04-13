@@ -1,23 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Models;
-using SynchronizationTool.Database.Models.Enums;
+using SynchronizationTool.Logic.Models.Commads;
 
 namespace SynchronizationTool.Database.Context
 {
     public partial class DbSynchronizationContext : DbContext, IDbSynchronizationContext
     {
+        private readonly IMediator _mediator;
         private readonly SynchronisationConfiguration _synchronisationConfiguration;
 
-        public DbSynchronizationContext(SynchronisationConfiguration synchronisationConfiguration)
-            : base() 
+        public DbSynchronizationContext(IMediator mediator, SynchronisationConfiguration synchronisationConfiguration)
+            : base()
         {
+            _mediator = mediator;
             _synchronisationConfiguration = synchronisationConfiguration;
         }
 
-        public DbSynchronizationContext(DbContextOptions options, SynchronisationConfiguration synchronisationConfiguration) 
+        public DbSynchronizationContext(DbContextOptions options, IMediator mediator, SynchronisationConfiguration synchronisationConfiguration)
             : base(options)
         {
+            _mediator = mediator;
             _synchronisationConfiguration = synchronisationConfiguration;
         }
 
@@ -40,94 +44,14 @@ namespace SynchronizationTool.Database.Context
 
         private async Task<int> SaveChangesWithTrackingAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)
         {
-            // Получаем все изменённые сущности отслеживаемых типов
-            var changedEntries = ChangeTracker.Entries()
-                .Where(e 
-                    => e.State == EntityState.Added 
-                    || e.State == EntityState.Modified 
-                    || e.State == EntityState.Deleted)
-                .ToList();
-
-            if (!changedEntries.Any())
-                return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-
-            // Для каждой изменённой сущности создаём ChangeLog
-            foreach (var entry in changedEntries)
+            await _mediator.Send(new TrackingChangesCommand()
             {
-                var entityType = entry.Entity.GetType();
-
-                var syncEntity = await EnsureSyncEntityAsync(entityType, cancellationToken);
-
-                if (syncEntity == null)
-                {
-                    continue;
-                }
-
-                var entityIdProperty = entry.Metadata.FindPrimaryKey()?.Properties.FirstOrDefault();
-                if (entityIdProperty == null) continue;
-
-                var entityIdValue = entry.Property(entityIdProperty.Name).CurrentValue;
-                if (entityIdValue is not Guid entityId) continue; // предполагаем, что все отслеживаемые сущности имеют Guid Id
-
-                // Получаем или создаём запись в таблице Entity
-                
-                var changeLog = new ChangeLog
-                {
-                    Id = Guid.NewGuid(),
-                    DateTime = DateTime.UtcNow,
-                    Type = entry.State switch
-                    {
-                        EntityState.Added => ChangeType.Insert,
-                        EntityState.Modified => ChangeType.Update,
-                        EntityState.Deleted => ChangeType.Delete,
-                        _ => throw new ArgumentOutOfRangeException()
-                    },
-                    Status = ChangeStatus.Pending,
-                    EntityId = syncEntity.Id,
-                    ClientId = _synchronisationConfiguration.ClientId,
-                    ClientVersion = _synchronisationConfiguration.CurrentClientVersion,
-                    Changes = new List<Change>()
-                };
-
-                // Заполняем список изменений (колонка -> новое значение)
-                if (entry.State == EntityState.Added)
-                {
-                    foreach (var property in entry.Properties
-                        .Where(p => !p.Metadata.IsPrimaryKey()))
-                    {
-                        changeLog.Changes.Add(new Change
-                        {
-                            ColumnName = property.Metadata.Name,
-                            Value = property.CurrentValue?.ToString() ?? "NULL",
-                            ChangeLogId = changeLog.Id
-                        });
-                    }
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    foreach (var property in entry.Properties
-                        .Where(p => p.IsModified && !p.Metadata.IsPrimaryKey()))
-                    {
-                        changeLog.Changes.Add(new Change
-                        {
-                            ColumnName = property.Metadata.Name,
-                            Value = property.CurrentValue?.ToString() ?? "NULL",
-                            ChangeLogId = changeLog.Id
-                        });
-                    }
-                }
-
-                ChangeLogs.Add(changeLog);
-            }
+                Context = this
+            });
 
             var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 
             return result;
-        }
-
-        private async Task<Entity?> EnsureSyncEntityAsync(Type entityType, CancellationToken cancellationToken)
-        {
-            return await SyncEntities.FirstOrDefaultAsync(e => e.Code == entityType.Name, cancellationToken);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

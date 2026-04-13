@@ -2,7 +2,7 @@
 {
     public record ResponseModel
     {
-        public int StatusCode { get; init; }
+        public int StatusCode { get; init; } = 204;
 
         public string Message { get; init; } = string.Empty;
 
@@ -11,6 +11,8 @@
 
     public record ResponseModel<TResponse> : ResponseModel
     {
+        public new int StatusCode { get; init; } = 200;
+
         public TResponse? Response { get; init; }
     }
 }
