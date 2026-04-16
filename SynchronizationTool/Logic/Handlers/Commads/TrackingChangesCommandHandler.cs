@@ -4,11 +4,10 @@ using Microsoft.Extensions.Options;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Models;
 using SynchronizationTool.Database.Models.Enums;
-using SynchronizationTool.Logic.Handlers;
 using SynchronizationTool.Logic.Models;
 using SynchronizationTool.Logic.Models.Commads;
 
-namespace SynchronizationTool.Database.Context.Handlers
+namespace SynchronizationTool.Logic.Handlers.Commads
 {
     public class TrackingChangesCommandHandler(
         ILogger<TrackingChangesCommandHandler> logger,
