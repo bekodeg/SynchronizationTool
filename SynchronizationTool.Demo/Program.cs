@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using NLog.Extensions.Logging;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Context;
 using SynchronizationTool.Database.Models;
@@ -10,6 +11,12 @@ using SynchronizationTool.Logic.Models.Commads;
 using SynchronizationTool.Logic.Models.Dto;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("LoggingConfiguration.json");
+var nLogConfig = new NLogLoggingConfiguration(builder.Configuration.GetSection("NLog"));
+
+builder.Logging.ClearProviders();
+builder.Services.AddLogging(m => m.AddNLog(nLogConfig));
 
 // 1.Привязка конфигурации
 builder.Services.Configure<SynchronisationConfiguration>(
@@ -34,6 +41,9 @@ builder.Services.AddLogging();
 
 builder.Services.AddControllers();
 
+builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -49,44 +59,21 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<DemoContext>();
     await db.Database.MigrateAsync(); // применит миграции, если не сделано ранее
 
-    if (!await db.SyncEntities.AnyAsync(e => e.Code == nameof(Product)))
+    var productCode = db.Model.GetEntityTypes().First(et => et.ClrType == typeof(Product)).GetTableName()!;
+
+    if (!await db.SyncEntities.AnyAsync(e => e.Code == productCode))
     {
         db.SyncEntities.Add(new Entity
         {
             Id = Guid.NewGuid(),
-            Code = nameof(Product)
+            Code = productCode,
         });
         await db.SaveChangesAsync();
         Console.WriteLine("Сущность 'Product' зарегистрирована в системе синхронизации.");
     }
 }
-//using (var scope = app.Services.CreateScope())
-//{
-//    var context = scope.ServiceProvider.GetRequiredService<DemoContext>();
-//    var mediatr = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-//    var res = await mediatr.Send(new ApplyChangeLogsCommand()
-//    {
-//        ChangeLogs = await context.ChangeLogs
-//            .Select(cl => new ChangeLogDto
-//            {
-//                Id = cl.Id,
-//                EntityId = cl.RowId,
-//                DateTime = cl.DateTime,
-//                Type = cl.Type,
-//                TableId = cl.EntityId,
-//                ClientId = cl.ClientId,
-//                ClientVersion = cl.ClientVersion,
-//                Changes = cl.Changes.Select(c => new ChangeDto
-//                {
-//                    ColumnName = c.ColumnName,
-//                    Value = c.Value
-//                }).ToList(),
-
-//            }).ToListAsync()
-//    });
-
-//    Console.WriteLine(res.Message);
-//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.Run();

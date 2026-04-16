@@ -11,7 +11,17 @@ namespace SynchronizationTool.Logic.Handlers
 
         public async Task<ResponseModel> Handle(TRequest request, CancellationToken cancellationToken)
         {
-            return await HandleAsync(request, cancellationToken);
+            var res = await HandleAsync(request, cancellationToken);
+
+            if (!res.IsError)
+            {
+                _logger.LogInformation("Хендлер {HandlerName} завершил обработку успешно", GetType().Name);
+            }
+            else
+            {   
+                _logger.LogError("Хендлер {HandlerName} завершил обработку с ошибкой: {Message}", GetType().Name, res.Message);
+            }
+            return res;
         }
 
         public abstract Task<ResponseModel> HandleAsync(TRequest request, CancellationToken cancellationToken);

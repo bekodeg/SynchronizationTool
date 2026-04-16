@@ -22,7 +22,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
         public override async Task<ResponseModel> HandleAsync(ApplyChangeLogsCommand request, CancellationToken cancellationToken)
         {
             var changeTables = request.ChangeLogs
-                .GroupBy(cl => cl.EntityId)
+                .GroupBy(cl => cl.TableId)
                 .ToDictionary(x => x.Key, x => x.ToList());
 
             var tableNames = await _dbSynchronizationContext.SyncEntities

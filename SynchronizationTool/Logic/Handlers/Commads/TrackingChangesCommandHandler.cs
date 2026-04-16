@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SynchronizationTool.Configuration;
@@ -31,7 +32,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 var entityType = entry.Entity.GetType();
 
                 var syncEntity = await request.Context.SyncEntities
-                    .FirstOrDefaultAsync(e => e.Code == entityType.Name, cancellationToken);
+                    .FirstOrDefaultAsync(e => e.Code == entry.Metadata.GetTableName(), cancellationToken);
 
                 if (syncEntity == null)
                 {
@@ -57,6 +58,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                     },
                     Status = ChangeStatus.Pending,
                     EntityId = syncEntity.Id,
+                    RowId = (Guid)entityIdValue,
                     ClientId = config.ClientId,
                     ClientVersion = config.CurrentClientVersion,
                     Changes = new List<Change>()

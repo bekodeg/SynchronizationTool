@@ -2,7 +2,7 @@
 {
     public class Change
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string ColumnName { get; set; } = null!;
         public string Value { get; set; } = null!;
         public Guid ChangeLogId { get; set; }
