@@ -123,6 +123,8 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 // Применяем изменения к свойствам сущности
                 ApplyChangesToEntity(entity, latestChange.Changes, entityProperties);
             }
+
+            await _dbSynchronizationContext.SaveChangesAsync();
         }
 
         /// <summary>

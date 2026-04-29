@@ -25,8 +25,21 @@ builder.Services.Configure<SynchronisationConfiguration>(
 // 2. Регистрация DemoContext и DbSynchronizationContext
 builder.Services.AddDbContext<DemoContext>((sp, options) =>
 {
+    var dbType = Enum.Parse<DatabaseType>(builder.Configuration.GetConnectionString("DatabaseType")!);
     var connString = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.UseSqlite(connString);
+
+    if (dbType == DatabaseType.SQLite)
+    {
+        options.UseSqlite(connString);
+    }
+    else if (dbType == DatabaseType.MSSQL)
+    {
+        options.UseSqlServer(connString);
+    }
+    else if (dbType == DatabaseType.Postgres)
+    {
+        options.UseNpgsql(connString);
+    }
 });
 
 // Чтобы хендлеры могли получить DbSynchronizationContext, регистрируем базовый тип
