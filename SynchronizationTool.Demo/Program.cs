@@ -18,39 +18,26 @@ var nLogConfig = new NLogLoggingConfiguration(builder.Configuration.GetSection("
 builder.Logging.ClearProviders();
 builder.Services.AddLogging(m => m.AddNLog(nLogConfig));
 
-// 1.Привязка конфигурации
-builder.Services.Configure<SynchronisationConfiguration>(
-    builder.Configuration.GetSection(nameof(SynchronisationConfiguration)));
-
-// 2. Регистрация DemoContext и DbSynchronizationContext
-builder.Services.AddDbContext<DemoContext>((sp, options) =>
+builder.Services.AddDbContext<DbSynchronizationContext, DemoContext>((sp, options) =>
 {
     var dbType = Enum.Parse<DatabaseType>(builder.Configuration.GetConnectionString("DatabaseType")!);
     var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    if (dbType == DatabaseType.SQLite)
+    switch (dbType)
     {
-        options.UseSqlite(connString);
-    }
-    else if (dbType == DatabaseType.MSSQL)
-    {
-        options.UseSqlServer(connString);
-    }
-    else if (dbType == DatabaseType.Postgres)
-    {
-        options.UseNpgsql(connString);
+        case DatabaseType.SQLite:
+            options.UseSqlite(connString);
+            break;
+        case DatabaseType.MSSQL:
+            options.UseSqlServer(connString);
+            break;
+        case DatabaseType.Postgres:
+            options.UseNpgsql(connString);
+            break;
     }
 });
 
-// Чтобы хендлеры могли получить DbSynchronizationContext, регистрируем базовый тип
-builder.Services.AddScoped<DbSynchronizationContext>(sp => sp.GetRequiredService<DemoContext>());
-
-// 3. MediatR
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(ApplyChangeLogsCommandHandler).Assembly));
-
-// 4. Логирование (по желанию)
-builder.Services.AddLogging();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddControllers();
 
@@ -59,12 +46,8 @@ builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
-
-//app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

@@ -1,15 +1,23 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SynchronizationTool.Configuration;
+using SynchronizationTool.Database.Context;
+using SynchronizationTool.Logic.Handlers.Commads;
 
 namespace SynchronizationTool.Extensions
 {
     public static class DiExtensions
     {
-        public static IServiceCollection AddSynchronisation(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddSynchronisation<Tcontext>(
+            this IServiceCollection services, 
+            IConfiguration configuration) where Tcontext : DbSynchronizationContext
         {
-            services.ConfigureOptions<SynchronisationConfiguration>();
+            services.Configure<SynchronisationConfiguration>(
+                configuration.GetSection(nameof(SynchronisationConfiguration)));
 
+            services.AddScoped<DbSynchronizationContext>(sp => sp.GetRequiredService<Tcontext>());
+
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DbSynchronizationContext).Assembly));
 
             return services;
         }
