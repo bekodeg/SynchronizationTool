@@ -19,16 +19,9 @@ namespace SynchronizationTool.Demo.Database.Context
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); 
-
-            modelBuilder.Entity<Product>(entity =>
-            {
-                entity.ToTable("Products");
-                entity.HasKey(p => p.Id);
-                entity.Property(p => p.Name).IsRequired();
-            });
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

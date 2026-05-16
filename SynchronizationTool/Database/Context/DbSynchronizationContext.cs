@@ -25,6 +25,11 @@ namespace SynchronizationTool.Database.Context
             _synchronisationConfiguration = synchronisationConfiguration;
         }
 
+        public DbSynchronizationContext(DbContextOptions<DbSynchronizationContext> options)
+        : base(options)
+        {
+        }
+
         // Таблицы синхронизации
         public DbSet<Entity> SyncEntities { get; set; }
         public DbSet<ChangeLog> ChangeLogs { get; set; }

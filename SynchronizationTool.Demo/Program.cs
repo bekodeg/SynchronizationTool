@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NLog.Extensions.Logging;
 using SynchronizationTool.Configuration;
@@ -6,9 +5,7 @@ using SynchronizationTool.Database.Context;
 using SynchronizationTool.Database.Models;
 using SynchronizationTool.Demo.Database.Context;
 using SynchronizationTool.Demo.Database.Models;
-using SynchronizationTool.Logic.Handlers.Commads;
-using SynchronizationTool.Logic.Models.Commads;
-using SynchronizationTool.Logic.Models.Dto;
+using SynchronizationTool.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +14,8 @@ var nLogConfig = new NLogLoggingConfiguration(builder.Configuration.GetSection("
 
 builder.Logging.ClearProviders();
 builder.Services.AddLogging(m => m.AddNLog(nLogConfig));
+
+builder.Services.AddSynchronisation<DbSynchronizationContext>(builder.Configuration);
 
 builder.Services.AddDbContext<DbSynchronizationContext, DemoContext>((sp, options) =>
 {
@@ -49,25 +48,6 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.MapControllers();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<DemoContext>();
-    await db.Database.MigrateAsync(); // применит миграции, если не сделано ранее
-
-    var productCode = db.Model.GetEntityTypes().First(et => et.ClrType == typeof(Product)).GetTableName()!;
-
-    if (!await db.SyncEntities.AnyAsync(e => e.Code == productCode))
-    {
-        db.SyncEntities.Add(new Entity
-        {
-            Id = Guid.NewGuid(),
-            Code = productCode,
-        });
-        await db.SaveChangesAsync();
-        Console.WriteLine("Сущность 'Product' зарегистрирована в системе синхронизации.");
-    }
-}
 
 app.UseSwagger();
 app.UseSwaggerUI();

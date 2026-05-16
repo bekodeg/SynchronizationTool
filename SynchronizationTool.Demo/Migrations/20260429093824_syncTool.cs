@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SynchronizationTool.Demo.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class syncTool : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,8 +19,8 @@ namespace SynchronizationTool.Demo.Migrations
                 schema: "sync",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Code = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -28,32 +28,18 @@ namespace SynchronizationTool.Demo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Products",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Price = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Stock = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Products", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ChangeLog",
                 schema: "sync",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DateTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RowId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ClientId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ClientVersion = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    EntityId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RowId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientVersion = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -72,11 +58,10 @@ namespace SynchronizationTool.Demo.Migrations
                 schema: "sync",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ColumnName = table.Column<string>(type: "TEXT", nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: false),
-                    ChangeLogId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ColumnName = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: false),
+                    ChangeLogId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -102,6 +87,7 @@ namespace SynchronizationTool.Demo.Migrations
                 table: "ChangeLog",
                 column: "EntityId");
 
+
             migrationBuilder.CreateIndex(
                 name: "IX_entity_Code",
                 schema: "sync",
@@ -116,9 +102,6 @@ namespace SynchronizationTool.Demo.Migrations
             migrationBuilder.DropTable(
                 name: "Change",
                 schema: "sync");
-
-            migrationBuilder.DropTable(
-                name: "Products");
 
             migrationBuilder.DropTable(
                 name: "ChangeLog",
