@@ -17,10 +17,18 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+	<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.4" />
+	<PackageReference Include="Grpc.Net.ClientFactory" Version="2.80.0" />
+	<PackageReference Include="Grpc.Net.Client" Version="2.80.0" />
+	<PackageReference Include="Grpc.AspNetCore.Server" Version="2.80.0" />
+	<PackageReference Include="Grpc.Tools" Version="2.80.0">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+	<PackageReference Include="Google.Protobuf" Version="3.34.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Proto\" />
+    <Protobuf Include=".\Proto\SynchData.proto" GrpcServices="SynchromisationService" />
   </ItemGroup>
-
 </Project>

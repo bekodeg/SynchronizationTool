@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8 d17.14
+VisualStudioVersion = 17.14.36623.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SynchronizationTool", "SynchronizationTool\SynchronizationTool.csproj", "{6CEDAB65-3FF3-4B80-8768-ED8B6B4CD939}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SynchronizationTool.Demo", "SynchronizationTool.Demo\SynchronizationTool.Demo.csproj", "{A0469B6F-B0EB-40F1-AC68-77FBB7CBBED7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SynchronizationTool.Test", "SynchronizationTool.Test\SynchronizationTool.Test.csproj", "{E3EB1E07-5CF5-4B24-B18A-A65A8278FF20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{A0469B6F-B0EB-40F1-AC68-77FBB7CBBED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0469B6F-B0EB-40F1-AC68-77FBB7CBBED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0469B6F-B0EB-40F1-AC68-77FBB7CBBED7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3EB1E07-5CF5-4B24-B18A-A65A8278FF20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3EB1E07-5CF5-4B24-B18A-A65A8278FF20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3EB1E07-5CF5-4B24-B18A-A65A8278FF20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3EB1E07-5CF5-4B24-B18A-A65A8278FF20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

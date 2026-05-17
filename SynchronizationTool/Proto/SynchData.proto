@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option csharp_namespace = "Protos";
+
+package Synchronisation;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service SynchronisationService {
+    rpc SendChange (ChangeBucket) returns (google.protobuf.Empty) {
+		
+	};
+}
+
+message ChangeBucket {
+    repeated ChangeAtom changes = 1;
+}
+
+message ChangeAtom { 
+    string id = 1;
+    google.protobuf.Timestamp dateTime = 2;
+    string tableId = 3;
+    string entityId = 4;
+    int32 type = 5;
+    repeated ChangeModel changes = 6;
+    int32 clientVersion = 7;
+    string clientId = 8;
+}
+
+message ChangeModel {
+    string columnName = 1;
+    oneof column {
+        string value = 2;
+        google.protobuf.Empty null = 3;
+    }
+}
