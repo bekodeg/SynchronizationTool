@@ -22,15 +22,12 @@ namespace SynchronizationTool.Demo.Controllers
 
         // POST: api/products/apply-changelogs-from-body
         [HttpPost("apply-changelogs-from-body")]
-        public async Task<IActionResult> ApplyChangeLogsFromBody([FromBody] List<ChangeLogDto> changeLogDtos)
+        public async Task<IActionResult> ApplyChangeLogsFromBody()
         {
-            if (changeLogDtos == null || changeLogDtos.Count == 0)
-                return BadRequest("Change logs list is empty.");
-
-            var command = new ApplyChangeLogsCommand { ChangeLogs = changeLogDtos };
+            var command = new ApplyChangeLogsCommand();
             await _mediator.Send(command);
 
-            return Ok($"Applied {changeLogDtos.Count} change logs from request body.");
+            return Ok($"Applied change logs from request body.");
         }
     }
 }

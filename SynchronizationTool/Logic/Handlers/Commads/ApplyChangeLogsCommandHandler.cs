@@ -21,7 +21,23 @@ namespace SynchronizationTool.Logic.Handlers.Commads
 
         public override async Task<ResponseModel> HandleAsync(ApplyChangeLogsCommand request, CancellationToken cancellationToken)
         {
-            var changeTables = request.ChangeLogs
+            var changeTables = _dbSynchronizationContext.ChangeLogs
+                .Where(cl => cl.Status == ChangeStatus.Pending)
+                .Select(cl => new ChangeLogDto()
+                {
+                    DateTime = cl.DateTime,
+                    TableId = cl.EntityId,
+                    Type = cl.Type,
+                    Id = cl.Id,
+                    ClientVersion = cl.ClientVersion,
+                    ClientId = cl.ClientId,
+                    EntityId = cl.RowId,
+                    Changes = cl.Changes.Select(x => new ChangeDto()
+                    {
+                        ColumnName = x.ColumnName,
+                        Value = x.Value,
+                    }).ToList(),
+                })
                 .GroupBy(cl => cl.TableId)
                 .ToDictionary(x => x.Key, x => x.ToList());
 
@@ -172,10 +188,6 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 // Преобразуем строковое значение в тип свойства
                 object? convertedValue = ConvertValue(change.Value, propertyInfo.PropertyType);
                 propertyInfo.SetValue(entity, convertedValue);
-
-                // При необходимости можно явно пометить свойство как изменённое (если используется Attach)
-                // var entry = _dbSynchronizationContext.Entry(entity);
-                // entry.Property(property.Name).IsModified = true;
             }
         }
 

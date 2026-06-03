@@ -15,8 +15,6 @@ namespace SynchronizationTool.Extensions
             services.Configure<SynchronisationConfiguration>(
                 configuration.GetSection(nameof(SynchronisationConfiguration)));
 
-            //services.AddScoped<DbSynchronizationContext>(sp => sp.GetRequiredService<Tcontext>());
-
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DbSynchronizationContext).Assembly));
 
             return services;

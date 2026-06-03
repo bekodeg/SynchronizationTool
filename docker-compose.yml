@@ -1,0 +1,17 @@
+services:
+  synchronizationtool.demo1:
+    image: ${DOCKER_REGISTRY-}synchronizationtooldemo
+    build:
+      context: .
+      dockerfile: SynchronizationTool.Demo/Dockerfile
+    entrypoint:
+      - DATABASE_TYPE=SQLite
+      - CONNECTION_STRING="Data Source=demo_sync.db"
+  synchronizationtool.demo2:
+    image: ${DOCKER_REGISTRY-}synchronizationtooldemo
+    entrypoint:
+      - DATABASE_TYPE=Postgres
+      - CONNECTION_STRING="Server=localhost;Port=5432;Database=mydb;User Id=postgres;Password=postgres"
+    depends_on:
+      synchronizationtool.demo1:
+        condition: service_healthy

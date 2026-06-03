@@ -13,7 +13,7 @@ namespace SynchronizationTool.Logic.gRPC
     {
         private readonly IDbSynchronizationContext _synchronizationContext = synchronizationContext;
 
-        public override Task<Empty> SendChange(ChangeBucket request, ServerCallContext context)
+        public override async Task<Empty> SendChange(ChangeBucket request, ServerCallContext context)
         {
             List<ChangeLog> changes = request.Changes.Select(c => new ChangeLog
             {
@@ -31,7 +31,11 @@ namespace SynchronizationTool.Logic.gRPC
                     Value = ch.ColumnCase.HasFlag(ChangeModel.ColumnOneofCase.Value) ? ch.Value : null,
                 }).ToList()
             }).ToList();
-            return Task.FromResult(new Empty());
+
+            await _synchronizationContext.ChangeLogs.AddRangeAsync(changes);
+            await _synchronizationContext.SaveChangesWithoutTrackingAsync(true, context.CancellationToken);
+
+            return new Empty();
         }
     }
 }

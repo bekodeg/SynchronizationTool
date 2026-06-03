@@ -2,9 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NLog.Extensions.Logging;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Context;
-using SynchronizationTool.Database.Models;
 using SynchronizationTool.Demo.Database.Context;
-using SynchronizationTool.Demo.Database.Models;
 using SynchronizationTool.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,19 +17,32 @@ builder.Services.AddSynchronisation<DbSynchronizationContext>(builder.Configurat
 
 builder.Services.AddDbContext<DbSynchronizationContext, DemoContext>((sp, options) =>
 {
-    var dbType = Enum.Parse<DatabaseType>(builder.Configuration.GetConnectionString("DatabaseType")!);
-    var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var dbTypeStr = Environment.GetEnvironmentVariable("DATABASE_TYPE");
+
+    if (string.IsNullOrEmpty(dbTypeStr))
+    {
+        dbTypeStr = builder.Configuration.GetConnectionString("DatabaseType");
+    }
+
+    var dbType = Enum.Parse<DatabaseType>(dbTypeStr!);
+
+    var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    }   
 
     switch (dbType)
     {
         case DatabaseType.SQLite:
-            options.UseSqlite(connString);
+            options.UseSqlite(connectionString);
             break;
         case DatabaseType.MSSQL:
-            options.UseSqlServer(connString);
+            options.UseSqlServer(connectionString);
             break;
         case DatabaseType.Postgres:
-            options.UseNpgsql(connString);
+            options.UseNpgsql(connectionString);
             break;
     }
 });

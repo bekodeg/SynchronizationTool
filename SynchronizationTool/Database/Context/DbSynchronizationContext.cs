@@ -90,5 +90,12 @@ namespace SynchronizationTool.Database.Context
                       .HasForeignKey(c => c.ChangeLogId);
             });
         }
+
+        public async Task<int> SaveChangesWithoutTrackingAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+        {
+            var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+            return result;
+        }
     }
 }
