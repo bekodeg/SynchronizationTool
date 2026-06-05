@@ -6,22 +6,22 @@ using SynchronizationTool.Database.Models.Enums;
 using SynchronizationTool.Logic.Models;
 using SynchronizationTool.Logic.Models.Commads;
 using SynchronizationTool.Logic.Models.Dto;
-using System.Collections;
 using System.Globalization;
-using System.Linq.Expressions;
 
 namespace SynchronizationTool.Logic.Handlers.Commads
 {
     public class ApplyChangeLogsCommandHandler(
         ILogger<ApplyChangeLogsCommandHandler> logger,
-        DbSynchronizationContext dbSynchronizationContext
+        IDbSynchronizationContext dbSynchronizationContext,
+        ISynchronizationToolContext synchronizationToolContext
         ) : AbstractCommandHandler<ApplyChangeLogsCommand>(logger)
     {
-        private readonly DbSynchronizationContext _dbSynchronizationContext = dbSynchronizationContext;
+        private readonly IDbSynchronizationContext _dbSynchronizationContext = dbSynchronizationContext;
+        private readonly ISynchronizationToolContext _synchronizationToolContext = synchronizationToolContext;
 
         public override async Task<ResponseModel> HandleAsync(ApplyChangeLogsCommand request, CancellationToken cancellationToken)
         {
-            var changeTables = _dbSynchronizationContext.ChangeLogs
+            var changeTables = _synchronizationToolContext.ChangeLogs
                 .Where(cl => cl.Status == ChangeStatus.Pending)
                 .Select(cl => new ChangeLogDto()
                 {
@@ -41,7 +41,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 .GroupBy(cl => cl.TableId)
                 .ToDictionary(x => x.Key, x => x.ToList());
 
-            var tableNames = await _dbSynchronizationContext.SyncEntities
+            var tableNames = await _synchronizationToolContext.SyncEntities
                 .Where(t => changeTables.Keys.Contains(t.Id))
                 .ToDictionaryAsync(t => t.Id, t => t.Code, cancellationToken);
 
@@ -65,9 +65,10 @@ namespace SynchronizationTool.Logic.Handlers.Commads
             var rows = changelog.GroupBy(cl => cl.EntityId)
                 .ToDictionary(x => x.Key, x => x.OrderByDescending(e => e.DateTime).ToList());
 
-            Type? entityType = _dbSynchronizationContext.Model
-                .GetEntityTypes()
-                .FirstOrDefault(et => et.GetTableName() == table)?.ClrType;
+            var transaction = await _dbSynchronizationContext.BeginTransactionAsync();
+
+            Type? entityType = _dbSynchronizationContext.FindEntityType(table);
+
 
             if (entityType == null)
             {
@@ -76,10 +77,11 @@ namespace SynchronizationTool.Logic.Handlers.Commads
             }
 
             // Получаем метаданные EF Core для сопоставления колонок и свойств
-            var entityProperties = _dbSynchronizationContext.Model
+            var entityProperties = _dbSynchronizationContext
                 .FindEntityType(entityType)?
                 .GetProperties()
-                .ToDictionary(p => p.GetColumnName(), p => p)!;
+                .ToDictionary(p => p.GetColumnName(), p => p)
+                ?? throw new KeyNotFoundException(table);
 
             foreach (var row in rows)
             {
@@ -110,7 +112,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 {
                     entity = Activator.CreateInstance(entityType)!;
                     SetPrimaryKeyValue(entity, row.Key, entityType);
-                    _dbSynchronizationContext.Add(entity);
+                    await _dbSynchronizationContext.AddAsync(entity);
                 }
                 else
                 {
@@ -140,7 +142,8 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 ApplyChangesToEntity(entity, latestChange.Changes, entityProperties);
             }
 
-            await _dbSynchronizationContext.SaveChangesAsync();
+            await _dbSynchronizationContext.SaveChangesWithoutTrackingAsync();
+            await transaction.CommitAsync();
         }
 
         /// <summary>
@@ -149,7 +152,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
         /// </summary>
         private void SetPrimaryKeyValue(object entity, Guid keyValue, Type entityType)
         {
-            var keyProperty = _dbSynchronizationContext.Model
+            var keyProperty = _dbSynchronizationContext
                 .FindEntityType(entityType)?
                 .FindPrimaryKey()?
                 .Properties

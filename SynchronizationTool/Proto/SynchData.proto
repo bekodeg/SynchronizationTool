@@ -19,7 +19,7 @@ message ChangeBucket {
 
 message ChangeAtom { 
     string id = 1;
-    google.protobuf.Timestamp dateTime = 2;
+    google.protobuf.timestamp dateTime = 2;
     string tableId = 3;
     string entityId = 4;
     int32 type = 5;

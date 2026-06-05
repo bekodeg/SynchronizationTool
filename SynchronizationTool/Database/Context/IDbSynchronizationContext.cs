@@ -1,14 +1,29 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SynchronizationTool.Database.Models;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Transactions;
+using static Grpc.Core.Metadata;
 
 namespace SynchronizationTool.Database.Context
 {
     public interface IDbSynchronizationContext
     {
-        Task<int> SaveChangesWithoutTrackingAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken);
+        Type? FindEntityType(string tableName);
 
-        DbSet<Entity> SyncEntities { get; }
-        DbSet<ChangeLog> ChangeLogs { get; }
-        DbSet<Change> Changes { get; }
+        IEntityType? FindEntityType(Type type);
+
+        EntityEntry Entry(object entity);
+
+        ValueTask<object?> FindAsync(Type type, params object[] keys);
+
+        EntityEntry Remove(object entity);
+
+        ValueTask<EntityEntry> AddAsync(object entity, CancellationToken cancellationToken = default);
+
+        EntityEntry Attach(object entity);
+
+        Task<int> SaveChangesWithoutTrackingAsync(CancellationToken cancellationToken = default);
+
+        Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
     }
 }

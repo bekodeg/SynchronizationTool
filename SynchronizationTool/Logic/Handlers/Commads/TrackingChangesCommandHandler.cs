@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SynchronizationTool.Configuration;
+using SynchronizationTool.Database.Context;
 using SynchronizationTool.Database.Models;
 using SynchronizationTool.Database.Models.Enums;
 using SynchronizationTool.Logic.Models;
@@ -12,10 +13,12 @@ namespace SynchronizationTool.Logic.Handlers.Commads
 {
     public class TrackingChangesCommandHandler(
         ILogger<TrackingChangesCommandHandler> logger,
-        IOptions<SynchronisationConfiguration> config
+        IOptions<SynchronisationConfiguration> config,
+        ISynchronizationToolContext synchronizationToolContext
         ) : AbstractCommandHandler<TrackingChangesCommand>(logger)
     {
         private readonly SynchronisationConfiguration config = config.Value;
+        private readonly ISynchronizationToolContext _synchronizationToolContext = synchronizationToolContext;
 
         public override async Task<ResponseModel> HandleAsync(TrackingChangesCommand request, CancellationToken cancellationToken)
         {
@@ -31,7 +34,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
             {
                 var entityType = entry.Entity.GetType();
 
-                var syncEntity = await request.Context.SyncEntities
+                var syncEntity = await _synchronizationToolContext.SyncEntities
                     .FirstOrDefaultAsync(e => e.Code == entry.Metadata.GetTableName(), cancellationToken);
 
                 if (syncEntity == null)
@@ -90,8 +93,10 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                     }
                 }
 
-                request.Context.ChangeLogs.Add(changeLog);
+                await _synchronizationToolContext.ChangeLogs.AddAsync(changeLog);
             }
+
+            await _synchronizationToolContext.SaveChangesAsync();
 
             return new();
         }

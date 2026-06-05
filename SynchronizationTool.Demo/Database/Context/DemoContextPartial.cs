@@ -9,8 +9,6 @@ namespace SynchronizationTool.Demo.Database.Context
 {
     public partial class DemoContext : DbSynchronizationContext
     {
-        public DbSet<Product> Products { get; set; }
-
         public DemoContext(
             DbContextOptions<DemoContext> options,
             IMediator mediator,

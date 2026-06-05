@@ -1,6 +1,6 @@
 ﻿using Google.Protobuf;
 
-namespace SynchronizationTool.Logic.Models.Commads
+namespace SynchronizationTool.Logic.Models.Queries
 {
     public record EncryptProtoMessageQuery : Query<byte[]>
     {

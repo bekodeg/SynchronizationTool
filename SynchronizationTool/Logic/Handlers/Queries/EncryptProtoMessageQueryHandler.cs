@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Logic.Models;
-using SynchronizationTool.Logic.Models.Commads;
+using SynchronizationTool.Logic.Models.Queries;
 using System.Security.Cryptography;
 using System.Text;
 

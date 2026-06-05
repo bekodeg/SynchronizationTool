@@ -1,17 +1,23 @@
 services:
-  synchronizationtool.demo1:
-    image: ${DOCKER_REGISTRY-}synchronizationtooldemo
+  synchronizationtool.sqlite:
+    image: bekodeg/synchronizationtool-demo:test-sqlite
     build:
       context: .
       dockerfile: SynchronizationTool.Demo/Dockerfile
-    entrypoint:
-      - DATABASE_TYPE=SQLite
-      - CONNECTION_STRING="Data Source=demo_sync.db"
-  synchronizationtool.demo2:
-    image: ${DOCKER_REGISTRY-}synchronizationtooldemo
-    entrypoint:
-      - DATABASE_TYPE=Postgres
-      - CONNECTION_STRING="Server=localhost;Port=5432;Database=mydb;User Id=postgres;Password=postgres"
-    depends_on:
-      synchronizationtool.demo1:
-        condition: service_healthy
+    ports:
+      - 8081:8080 
+    environment:
+      DATABASE_TYPE: "SQLite"
+      CONNECTION_STRING: "Data Source=db/demo_sync.db"
+    volumes:
+      - ./db:/app/db
+  synchronizationtool.postgres:
+    image: bekodeg/synchronizationtool-demo:test-postgres
+    build:
+      context: .
+      dockerfile: SynchronizationTool.Demo/Dockerfile
+    ports:
+      - 8082:8080 
+    environment:
+      DATABASE_TYPE: "Postgres"
+      CONNECTION_STRING: "Server=192.168.0.14;Port=5432;Database=mydb;User Id=postgres;Password=postgres"

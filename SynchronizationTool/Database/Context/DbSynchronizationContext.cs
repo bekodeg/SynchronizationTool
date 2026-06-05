@@ -1,51 +1,48 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using SynchronizationTool.Configuration;
-using SynchronizationTool.Database.Models;
 using SynchronizationTool.Logic.Models.Commads;
+using System.Transactions;
 
 namespace SynchronizationTool.Database.Context
 {
     public partial class DbSynchronizationContext : DbContext, IDbSynchronizationContext
     {
         private readonly IMediator _mediator;
-        private readonly SynchronisationConfiguration _synchronisationConfiguration;
 
-        public DbSynchronizationContext(IMediator mediator, SynchronisationConfiguration synchronisationConfiguration)
+        public DbSynchronizationContext(IMediator mediator)
             : base()
         {
             _mediator = mediator;
-            _synchronisationConfiguration = synchronisationConfiguration;
         }
 
         public DbSynchronizationContext(DbContextOptions options, IMediator mediator, SynchronisationConfiguration synchronisationConfiguration)
             : base(options)
         {
             _mediator = mediator;
-            _synchronisationConfiguration = synchronisationConfiguration;
         }
-
-        public DbSynchronizationContext(DbContextOptions<DbSynchronizationContext> options)
-        : base(options)
-        {
-        }
-
-        // Таблицы синхронизации
-        public DbSet<Entity> SyncEntities { get; set; }
-        public DbSet<ChangeLog> ChangeLogs { get; set; }
-        public DbSet<Change> Changes { get; set; }
-
 
         // Переопределение SaveChanges
-        public override int SaveChanges(bool acceptAllChangesOnSuccess)
-        {
-            return SaveChangesWithTrackingAsync(acceptAllChangesOnSuccess, CancellationToken.None).GetAwaiter().GetResult();
-        }
+        public override int SaveChanges(bool acceptAllChangesOnSuccess) 
+            => SaveChangesWithTrackingAsync(acceptAllChangesOnSuccess, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
 
-        public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-        {
-            return await SaveChangesWithTrackingAsync(acceptAllChangesOnSuccess, cancellationToken);
-        }
+        public override int SaveChanges()
+            => SaveChangesWithTrackingAsync(true, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+        public override async Task<int> SaveChangesAsync(
+            bool acceptAllChangesOnSuccess,
+            CancellationToken cancellationToken = default) 
+            => await SaveChangesWithTrackingAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+            => await SaveChangesWithTrackingAsync(true, cancellationToken);
+            
 
         private async Task<int> SaveChangesWithTrackingAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)
         {
@@ -59,43 +56,20 @@ namespace SynchronizationTool.Database.Context
             return result;
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        public async Task<int> SaveChangesWithoutTrackingAsync(CancellationToken cancellationToken)
         {
-            base.OnModelCreating(modelBuilder);
-
-            // Конфигурация таблиц синхронизации
-            modelBuilder.Entity<Entity>(entity =>
-            {
-                entity.ToTable("entity", _synchronisationConfiguration.SynchSchema);
-                entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.Code).IsUnique();
-            });
-
-            modelBuilder.Entity<ChangeLog>(log =>
-            {
-                log.ToTable("ChangeLog", _synchronisationConfiguration.SynchSchema);
-                log.HasKey(l => l.Id);
-                log.HasOne(l => l.Entity)
-                   .WithMany(e => e.ChangeLogs)
-                   .HasForeignKey(l => l.EntityId);
-            });
-
-            modelBuilder.Entity<Change>(change =>
-            {
-                change.ToTable("Change", _synchronisationConfiguration.SynchSchema);
-                change.HasKey(c => c.Id);
-                change.Property(c => c.Id);
-                change.HasOne(c => c.ChangeLog)
-                      .WithMany(l => l.Changes)
-                      .HasForeignKey(c => c.ChangeLogId);
-            });
-        }
-
-        public async Task<int> SaveChangesWithoutTrackingAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)
-        {
-            var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-
+            var result = await base.SaveChangesAsync(cancellationToken);
             return result;
         }
+
+        public Type? FindEntityType(string tableName) => Model
+            .GetEntityTypes()
+            .FirstOrDefault(et => et.GetTableName() == tableName)?.ClrType;
+
+        public IEntityType? FindEntityType(Type type) 
+            => Model.FindEntityType(type);
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
+            => await Database.BeginTransactionAsync(cancellationToken);
     }
 }

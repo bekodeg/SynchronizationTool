@@ -9,9 +9,9 @@ using static Protos.SynchronisationService;
 
 namespace SynchronizationTool.Logic.gRPC
 {
-    public class SynchronisationInterface(IDbSynchronizationContext synchronizationContext) : SynchronisationServiceBase()
+    public class SynchronisationInterface(ISynchronizationToolContext synchronizationContext) : SynchronisationServiceBase()
     {
-        private readonly IDbSynchronizationContext _synchronizationContext = synchronizationContext;
+        private readonly ISynchronizationToolContext _synchronizationContext = synchronizationContext;
 
         public override async Task<Empty> SendChange(ChangeBucket request, ServerCallContext context)
         {
@@ -33,7 +33,7 @@ namespace SynchronizationTool.Logic.gRPC
             }).ToList();
 
             await _synchronizationContext.ChangeLogs.AddRangeAsync(changes);
-            await _synchronizationContext.SaveChangesWithoutTrackingAsync(true, context.CancellationToken);
+            await _synchronizationContext.SaveChangesAsync(context.CancellationToken);
 
             return new Empty();
         }

@@ -22,103 +22,6 @@ namespace SynchronizationTool.Demo.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("SynchronizationTool.Database.Models.Change", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ChangeLogId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ColumnName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChangeLogId");
-
-                    b.ToTable("Change", "sync");
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Database.Models.ChangeLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("ClientVersion")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RowId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntityId");
-
-                    b.ToTable("ChangeLog", "sync");
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Database.Models.Entity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("entity", "sync");
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Demo.Database.Models.Product", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("Stock")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Products");
-                });
-
             modelBuilder.Entity("SynchronizationTool.Demo.Database.Models.publicSchema.Device", b =>
                 {
                     b.Property<Guid>("Id")
@@ -153,36 +56,6 @@ namespace SynchronizationTool.Demo.Migrations
                     b.HasIndex("HomeId");
 
                     b.ToTable("device", (string)null);
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Demo.Database.Models.publicSchema.DeviceState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("device_id");
-
-                    b.Property<Guid>("StateTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("state_type_id");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("value");
-
-                    b.HasKey("Id")
-                        .HasName("device_state_id");
-
-                    b.HasIndex("DeviceId");
-
-                    b.HasIndex("StateTypeId");
-
-                    b.ToTable("device_state", (string)null);
                 });
 
             modelBuilder.Entity("SynchronizationTool.Demo.Database.Models.publicSchema.DeviceType", b =>
@@ -299,28 +172,6 @@ namespace SynchronizationTool.Demo.Migrations
                     b.ToTable("user_home", (string)null);
                 });
 
-            modelBuilder.Entity("SynchronizationTool.Database.Models.Change", b =>
-                {
-                    b.HasOne("SynchronizationTool.Database.Models.ChangeLog", "ChangeLog")
-                        .WithMany("Changes")
-                        .HasForeignKey("ChangeLogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ChangeLog");
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Database.Models.ChangeLog", b =>
-                {
-                    b.HasOne("SynchronizationTool.Database.Models.Entity", "Entity")
-                        .WithMany("ChangeLogs")
-                        .HasForeignKey("EntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Entity");
-                });
-
             modelBuilder.Entity("SynchronizationTool.Demo.Database.Models.publicSchema.Device", b =>
                 {
                     b.HasOne("SynchronizationTool.Demo.Database.Models.publicSchema.DeviceType", "DeviceType")
@@ -390,16 +241,6 @@ namespace SynchronizationTool.Demo.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("user_home_user_id_fkey");
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Database.Models.ChangeLog", b =>
-                {
-                    b.Navigation("Changes");
-                });
-
-            modelBuilder.Entity("SynchronizationTool.Database.Models.Entity", b =>
-                {
-                    b.Navigation("ChangeLogs");
                 });
 
             modelBuilder.Entity("SynchronizationTool.Demo.Database.Models.publicSchema.Device", b =>

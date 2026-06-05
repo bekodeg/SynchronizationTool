@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.24" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
@@ -25,8 +26,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
-    <PackageReference Include="NLog.Targets.AtomicFile" Version="6.1.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.4" />
+    <PackageReference Include="NLog.Targets.AtomicFile" Version="6.1.2">
+      <TreatAsUsed>true</TreatAsUsed>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.4">
+      <TreatAsUsed>true</TreatAsUsed>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="8.1.4" />
   </ItemGroup>
 

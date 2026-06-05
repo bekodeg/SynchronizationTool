@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SynchronizationTool.Demo.Migrations
+namespace SynchronizationTool.Database.Migrations
 {
     /// <inheritdoc />
     public partial class syncTool : Migration
