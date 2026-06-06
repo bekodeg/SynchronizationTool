@@ -25,10 +25,10 @@
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="Google.Protobuf" Version="3.34.1" />
+	<PackageReference Include="Google.Protobuf" Version="3.35.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include=".\Proto\SynchData.proto" GrpcServices="SynchromisationService" />
+	<Protobuf Include=".\Proto\SynchData.proto" GrpcServices="Both" />
   </ItemGroup>
 </Project>

@@ -11,6 +11,8 @@ namespace SynchronizationTool.Database.Models
 
         public List<ChangeLog> ChangeLogs { get; init; } = [];
 
-        public List<SynchState> SynchStates { get; init; } = [];
+        public Guid? LastChangeLogId { get; set; }
+
+        public ChangeLog? LastChangeLog { get; set; } 
     }
 }

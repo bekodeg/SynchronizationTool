@@ -4,7 +4,7 @@ namespace SynchronizationTool.Logic.Models.Dto
 {
     public record ChangeLogDto
     {
-        public Guid? Id { get; init; }
+        public Guid Id { get; init; }
         public DateTime DateTime { get; init; }
         public required Guid TableId { get; init; } 
         public required Guid EntityId { get; init; } 

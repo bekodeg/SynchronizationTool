@@ -30,8 +30,6 @@ namespace SynchronizationTool.Database.Context
 
         public DbSet<Change> Changes { get; set; }
 
-        public DbSet<SynchState> SynchStates { get; set; }
-
         public DbSet<SynchClient> SynchClients { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -66,18 +64,6 @@ namespace SynchronizationTool.Database.Context
                 change.HasOne(c => c.ChangeLog)
                       .WithMany(l => l.Changes)
                       .HasForeignKey(c => c.ChangeLogId);
-            });
-
-            modelBuilder.Entity<SynchState>(state =>
-            {
-                state.ToTable("SynchState", _synchronisationConfiguration.SynchSchema);
-                state.HasKey(s => s.Id);
-                state.HasOne(s => s.SynchClient)
-                     .WithMany(c => c.SynchStates)
-                     .HasForeignKey(s => s.ClientId);
-                state.HasOne(s => s.ChangeLog)
-                     .WithOne()
-                     .HasForeignKey<SynchState>(s => s.ChangeLogId);
             });
         }
     }

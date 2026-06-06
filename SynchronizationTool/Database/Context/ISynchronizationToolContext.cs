@@ -10,7 +10,6 @@ namespace SynchronizationTool.Database.Context
         DbSet<Entity> SyncEntities { get; }
         DbSet<ChangeLog> ChangeLogs { get; }
         DbSet<Change> Changes { get; }
-        DbSet<SynchState> SynchStates { get; }
         DbSet<SynchClient> SynchClients { get; }
     }
 }

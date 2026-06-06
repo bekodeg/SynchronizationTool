@@ -20,18 +20,17 @@ namespace SynchronizationTool.Logic.Handlers.Commads
 
         public override async Task<ResponseModel> HandleAsync(SendChangeLogCommand request, CancellationToken cancellationToken)
         {
-            var state = await _synchronizationToolContext.SynchStates
-                .Include(s => s.SynchClient)
-                .Include(s => s.ChangeLog)
-                .FirstOrDefaultAsync(s => s.ClientId == request.ClientId, cancellationToken);
+            var client = await _synchronizationToolContext.SynchClients
+                .Include(s => s.LastChangeLogId)
+                .FirstOrDefaultAsync(c => c.Id == request.ClientId, cancellationToken);
 
             var changeLogsTask = _synchronizationToolContext.ChangeLogs
                 .Where(cl => cl.ClientId != request.ClientId);
             
-            if (state is not null)
+            if (client!.LastChangeLog is not null)
             {
                 changeLogsTask = changeLogsTask
-                    .Where(cl => cl.DateTime > state.ChangeLog.DateTime);
+                    .Where(cl => cl.DateTime > client.LastChangeLog.DateTime);
             }
 
             var changelogs = await changeLogsTask.ToListAsync(cancellationToken);
