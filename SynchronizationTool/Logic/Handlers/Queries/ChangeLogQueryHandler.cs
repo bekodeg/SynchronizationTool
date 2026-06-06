@@ -3,22 +3,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Protos;
 using SynchronizationTool.Database.Context;
+using SynchronizationTool.Logic.gRPC;
 using SynchronizationTool.Logic.Models;
-using SynchronizationTool.Logic.Models.Commads;
+using SynchronizationTool.Logic.Models.Queries;
 using static Protos.SynchronisationService;
 
-namespace SynchronizationTool.Logic.Handlers.Commads
+namespace SynchronizationTool.Logic.Handlers.Queries
 {
-    public class SendChangeLogCommandHandler(
-        ILogger<SendChangeLogCommandHandler> logger,
+    public class ChangeLogQueryHandler(
+        ILogger<ChangeLogQueryHandler> logger,
         ISynchronizationToolContext synchronizationToolContext,
-        SynchronisationServiceClient synchronisationService
-        ) : AbstractCommandHandler<SendChangeLogCommand>(logger)
+        IClientChannelStorage clientChannelStorage
+        ) : AbstractQueryHandler<ChangeLogQuery, ChangeBucket>(logger)
     {
-        private readonly SynchronisationServiceClient _synchronisationService = synchronisationService;
         private readonly ISynchronizationToolContext _synchronizationToolContext = synchronizationToolContext;
+        private readonly IClientChannelStorage _clientChannelStorage = clientChannelStorage;
 
-        public override async Task<ResponseModel> HandleAsync(SendChangeLogCommand request, CancellationToken cancellationToken)
+        public override async Task<ResponseModel<ChangeBucket>> HandleAsync(ChangeLogQuery request, CancellationToken cancellationToken)
         {
             var client = await _synchronizationToolContext.SynchClients
                 .Include(s => s.LastChangeLogId)
@@ -35,12 +36,15 @@ namespace SynchronizationTool.Logic.Handlers.Commads
 
             var changelogs = await changeLogsTask.ToListAsync(cancellationToken);
 
+            var rpcRequest = new ChangeBucket();
+
             if (!changelogs.Any())
             {
-                return new ResponseModel();
-            }
-
-            var rpcRequest = new ChangeBucket();
+                return new() 
+                { 
+                    Response = rpcRequest
+                };
+            }   
 
             changelogs.ForEach(cl => 
             {
@@ -78,10 +82,10 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 rpcRequest.Changes.Add(changelog);
             });
 
-            await _synchronisationService
-                .SendChangeAsync(rpcRequest, cancellationToken: cancellationToken);
-
-            return new();
+            return new()
+            {
+                Response = rpcRequest
+            };
         }
     }
 }

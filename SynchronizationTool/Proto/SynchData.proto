@@ -9,8 +9,13 @@ import "google/protobuf/timestamp.proto";
 
 service SynchronisationService {
     rpc SendChange (ChangeBucket) returns (google.protobuf.Empty) {
-		
 	};
+    rpc GetChange (ChangeRequest) returns (ChangeBucket) {
+	};
+}
+
+message ChangeRequest {
+    string clientId = 1;
 }
 
 message ChangeBucket {

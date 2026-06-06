@@ -2,40 +2,44 @@
 using Grpc.Core;
 using MediatR;
 using Protos;
-using SynchronizationTool.Database.Context;
-using SynchronizationTool.Database.Models;
-using SynchronizationTool.Database.Models.Enums;
+using SynchronizationTool.Logic.Models.Commads;
+using SynchronizationTool.Logic.Models.Queries;
 using static Protos.SynchronisationService;
 
 namespace SynchronizationTool.Logic.gRPC
 {
-    public class SynchronisationInterface(ISynchronizationToolContext synchronizationContext) : SynchronisationServiceBase()
+    public class SynchronisationInterface(IMediator mediator) : SynchronisationServiceBase()
     {
-        private readonly ISynchronizationToolContext _synchronizationContext = synchronizationContext;
+        private readonly IMediator _mediator = mediator;
 
         public override async Task<Empty> SendChange(ChangeBucket request, ServerCallContext context)
         {
-            List<ChangeLog> changes = request.Changes.Select(c => new ChangeLog
+            var response =  await _mediator.Send(new SaveChangelogCommand()
             {
-                Id = Guid.Parse(c.Id),
-                DateTime = c.DateTime.ToDateTime(),
-                Type = (ChangeType)c.Type,
-                EntityId = Guid.Parse(c.EntityId),
-                RowId = Guid.NewGuid(),
-                ClientId = Guid.Parse(c.ClientId),
-                ClientVersion = c.ClientVersion,
-                Changes = c.Changes.Select(ch => new Change
-                {
-                    Id = Guid.NewGuid(),
-                    ColumnName = ch.ColumnName,
-                    Value = ch.ColumnCase.HasFlag(ChangeModel.ColumnOneofCase.Value) ? ch.Value : null,
-                }).ToList()
-            }).ToList();
+                RpcBucket = request
+            });
 
-            await _synchronizationContext.ChangeLogs.AddRangeAsync(changes);
-            await _synchronizationContext.SaveChangesAsync(context.CancellationToken);
+            if (response.IsError)
+            {
+                throw new InvalidOperationException(response.Message);
+            }
 
             return new Empty();
+        }
+
+        public override async Task<ChangeBucket> GetChange(ChangeRequest request, ServerCallContext context)
+        {
+            var changelogResponse = await _mediator.Send(new ChangeLogQuery()
+            {
+                ClientId = Guid.Parse(request.ClientId)
+            });
+
+            if (!changelogResponse.IsError)
+            {
+                throw new InvalidOperationException($"{changelogResponse.Message}");
+            }
+
+            return changelogResponse.Response!;
         }
     }
 }

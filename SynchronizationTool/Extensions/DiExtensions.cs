@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Context;
-using SynchronizationTool.Logic.Handlers.Commads;
+using SynchronizationTool.Logic.gRPC;
 
 namespace SynchronizationTool.Extensions
 {
@@ -16,6 +16,8 @@ namespace SynchronizationTool.Extensions
                 configuration.GetSection(nameof(SynchronisationConfiguration)));
 
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DbSynchronizationContext).Assembly));
+
+            services.AddSingleton<IClientChannelStorage, ClientChannelStorage>();
 
             return services;
         }
