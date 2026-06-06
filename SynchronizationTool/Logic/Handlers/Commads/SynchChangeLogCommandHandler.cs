@@ -12,7 +12,7 @@ using static Protos.SynchronisationService;
 namespace SynchronizationTool.Logic.Handlers.Commads
 {
     public class SynchChangeLogCommandHandler(
-        ILogger<SynchChangeLogCommand> logger,
+        ILogger<SynchChangeLogCommandHandler> logger,
         ISynchronizationToolContext synchronizationToolContext,
         IClientChannelStorage clientChannelStorage,
         IMediator mediator
@@ -55,6 +55,18 @@ namespace SynchronizationTool.Logic.Handlers.Commads
             }
             
             var response = await serviceClient.SendChangeAsync(rpcRequestResponse.Response, cancellationToken: cancellationToken);
+
+            var sentIds = rpcRequestResponse.Response!.Changes
+                .Select(c => Guid.Parse(c.Id))
+                .ToList();
+
+            var lastSentLog = await _synchronizationToolContext.ChangeLogs
+                .Where(cl => sentIds.Contains(cl.Id))
+                .OrderByDescending(cl => cl.DateTime)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (lastSentLog != null)
+                client.LastChangeLog = lastSentLog;
 
             await _synchronizationToolContext.SaveChangesAsync(cancellationToken);
 

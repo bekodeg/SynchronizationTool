@@ -1,26 +1,22 @@
-﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using SynchronizationTool.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
 using SynchronizationTool.Database.Models;
 
 namespace SynchronizationTool.Database.Context
 {
-    internal partial class SynchronizationToolContext : DbContext, ISynchronizationToolContext
+    public partial class SynchronizationToolContext : DbContext, ISynchronizationToolContext
     {
-        private readonly SynchronisationConfiguration _synchronisationConfiguration;
-
-        public SynchronizationToolContext(SynchronisationConfiguration synchronisationConfiguration)
+        public SynchronizationToolContext()
             : base()
         {
-            _synchronisationConfiguration = synchronisationConfiguration;
-            Database.Migrate();
         }
-
-        public SynchronizationToolContext(DbContextOptions options, IMediator mediator, SynchronisationConfiguration synchronisationConfiguration)
+        public SynchronizationToolContext(
+            DbContextOptions options, bool migrate = true)
             : base(options)
         {
-            _synchronisationConfiguration = synchronisationConfiguration;
-            Database.Migrate();
+            if (migrate)
+            {
+                Database.Migrate();
+            }
         }
 
         // Таблицы синхронизации
@@ -39,14 +35,14 @@ namespace SynchronizationTool.Database.Context
             // Конфигурация таблиц синхронизации
             modelBuilder.Entity<Entity>(entity =>
             {
-                entity.ToTable("entity", _synchronisationConfiguration.SynchSchema);
+                entity.ToTable("entity");
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.Code).IsUnique();
             });
 
             modelBuilder.Entity<ChangeLog>(log =>
             {
-                log.ToTable("ChangeLog", _synchronisationConfiguration.SynchSchema);
+                log.ToTable("ChangeLog");
                 log.HasKey(l => l.Id);
                 log.HasOne(l => l.Entity)
                    .WithMany(e => e.ChangeLogs)
@@ -58,12 +54,21 @@ namespace SynchronizationTool.Database.Context
 
             modelBuilder.Entity<Change>(change =>
             {
-                change.ToTable("Change", _synchronisationConfiguration.SynchSchema);
+                change.ToTable("Change");
                 change.HasKey(c => c.Id);
                 change.Property(c => c.Id);
                 change.HasOne(c => c.ChangeLog)
                       .WithMany(l => l.Changes)
                       .HasForeignKey(c => c.ChangeLogId);
+            });
+
+            modelBuilder.Entity<SynchClient>(client =>
+            {
+                client.ToTable("SynchClient");
+                client.HasKey(c => c.Id);
+                client.Property(c => c.LastChangeLogId);
+                client.HasOne(c => c.LastChangeLog)
+                      .WithOne();
             });
         }
     }

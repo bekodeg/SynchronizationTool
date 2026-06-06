@@ -3,99 +3,116 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SynchronizationTool.Database.Context;
 
 #nullable disable
 
 namespace SynchronizationTool.Database.Migrations
 {
-    [DbContext(typeof(DbSynchronizationContext))]
-    partial class DbSynchronizationContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(SynchronizationToolContext))]
+    partial class SynchronizationToolContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.24")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.24");
 
             modelBuilder.Entity("SynchronizationTool.Database.Models.Change", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("ChangeLogId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ColumnName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ChangeLogId");
 
-                    b.ToTable("Change", "sync");
+                    b.ToTable("Change", (string)null);
                 });
 
             modelBuilder.Entity("SynchronizationTool.Database.Models.ChangeLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("ClientId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("ClientVersion")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("DateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("RowId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Type")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ChangeLog", "sync");
+                    b.ToTable("ChangeLog", (string)null);
                 });
 
             modelBuilder.Entity("SynchronizationTool.Database.Models.Entity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("entity", "sync");
+                    b.ToTable("entity", (string)null);
+                });
+
+            modelBuilder.Entity("SynchronizationTool.Database.Models.SynchClient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LastChangeLogId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastChangeLogId")
+                        .IsUnique();
+
+                    b.ToTable("SynchClient", (string)null);
                 });
 
             modelBuilder.Entity("SynchronizationTool.Database.Models.Change", b =>
@@ -111,6 +128,12 @@ namespace SynchronizationTool.Database.Migrations
 
             modelBuilder.Entity("SynchronizationTool.Database.Models.ChangeLog", b =>
                 {
+                    b.HasOne("SynchronizationTool.Database.Models.SynchClient", "SynchClient")
+                        .WithMany("ChangeLogs")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SynchronizationTool.Database.Models.Entity", "Entity")
                         .WithMany("ChangeLogs")
                         .HasForeignKey("EntityId")
@@ -118,9 +141,30 @@ namespace SynchronizationTool.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Entity");
+
+                    b.Navigation("SynchClient");
+                });
+
+            modelBuilder.Entity("SynchronizationTool.Database.Models.SynchClient", b =>
+                {
+                    b.HasOne("SynchronizationTool.Database.Models.ChangeLog", "LastChangeLog")
+                        .WithOne()
+                        .HasForeignKey("SynchronizationTool.Database.Models.SynchClient", "LastChangeLogId");
+
+                    b.Navigation("LastChangeLog");
+                });
+
+            modelBuilder.Entity("SynchronizationTool.Database.Models.ChangeLog", b =>
+                {
+                    b.Navigation("Changes");
                 });
 
             modelBuilder.Entity("SynchronizationTool.Database.Models.Entity", b =>
+                {
+                    b.Navigation("ChangeLogs");
+                });
+
+            modelBuilder.Entity("SynchronizationTool.Database.Models.SynchClient", b =>
                 {
                     b.Navigation("ChangeLogs");
                 });

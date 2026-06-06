@@ -19,15 +19,17 @@ namespace SynchronizationTool.Demo.Controllers
             _mediator = mediator;
         }
 
-
-        // POST: api/products/apply-changelogs-from-body
-        [HttpPost("apply-changelogs-from-body")]
-        public async Task<IActionResult> ApplyChangeLogsFromBody()
+        [HttpPost("synch")]
+        public async Task<IActionResult> ApplyChangeLogsFromBody(Guid clientId)
         {
-            var command = new ApplyChangeLogsCommand();
+            var command = new SynchChangeLogCommand()
+            {
+                ClientId = clientId
+            };
+
             await _mediator.Send(command);
 
-            return Ok($"Applied change logs from request body.");
+            return Ok();
         }
     }
 }

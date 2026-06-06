@@ -21,7 +21,7 @@ namespace SynchronizationTool.Logic.gRPC
 
             if (response.IsError)
             {
-                throw new InvalidOperationException(response.Message);
+                throw new RpcException(new Status(StatusCode.InvalidArgument, response.Message));
             }
 
             return new Empty();
@@ -34,9 +34,9 @@ namespace SynchronizationTool.Logic.gRPC
                 ClientId = Guid.Parse(request.ClientId)
             });
 
-            if (!changelogResponse.IsError)
+            if (changelogResponse.IsError)
             {
-                throw new InvalidOperationException($"{changelogResponse.Message}");
+                throw new RpcException(new Status(StatusCode.Internal, changelogResponse.Message));
             }
 
             return changelogResponse.Response!;

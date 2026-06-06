@@ -9,6 +9,8 @@ services:
     environment:
       DATABASE_TYPE: "SQLite"
       CONNECTION_STRING: "Data Source=db/demo_sync.db"
+      SYNCH_DATABASE_TYPE: "SQLite"
+      SYNCH_CONNECTION_STRING: "Data Source=db/sync.db"
     volumes:
       - ./db:/app/db
   synchronizationtool.postgres:
@@ -21,3 +23,5 @@ services:
     environment:
       DATABASE_TYPE: "Postgres"
       CONNECTION_STRING: "Server=192.168.0.14;Port=5432;Database=mydb;User Id=postgres;Password=postgres"
+      SYNCH_DATABASE_TYPE: "Postgres"
+      SYNCH_CONNECTION_STRING: "Server=192.168.0.14;Port=5432;Database=mydb;User Id=postgres;Password=postgres"
