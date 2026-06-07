@@ -11,8 +11,11 @@ services:
       CONNECTION_STRING: "Data Source=db/demo_sync.db"
       SYNCH_DATABASE_TYPE: "SQLite"
       SYNCH_CONNECTION_STRING: "Data Source=db/sync.db"
+      SYNCH_CLIENT_ID: "871fc3c0-2084-4a86-9c81-9652242f279a"
+      SYNCH_CLIENT_VERSION: "1"
     volumes:
       - ./db:/app/db
+      - ./certs:/app/certs:ro
   synchronizationtool.postgres:
     image: bekodeg/synchronizationtool-demo:test-postgres
     build:
@@ -25,3 +28,7 @@ services:
       CONNECTION_STRING: "Server=192.168.0.14;Port=5432;Database=mydb;User Id=postgres;Password=postgres"
       SYNCH_DATABASE_TYPE: "Postgres"
       SYNCH_CONNECTION_STRING: "Server=192.168.0.14;Port=5432;Database=mydb;User Id=postgres;Password=postgres"
+      SYNCH_CLIENT_ID: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      SYNCH_CLIENT_VERSION: "1"
+    volumes:
+      - ./certs:/app/certs:ro

@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Options;
+using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Context;
 
 public class SynchronizationToolContextFactory
@@ -8,9 +10,10 @@ public class SynchronizationToolContextFactory
     public SynchronizationToolContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<SynchronizationToolContext>();
-        optionsBuilder.UseSqlite("DataSource=:memory:");
+        optionsBuilder.UseNpgsql("Server=192.168.0.14;Port=5432;Database=mydb;User Id=postgres;Password=postgres");
 
-        // ПЕРЕДАЁМ настроенные опции в конструктор с параметром DbContextOptions
-        return new SynchronizationToolContext(optionsBuilder.Options);
+        var config = new SynchronisationConfiguration();
+
+        return new SynchronizationToolContext(optionsBuilder.Options, new OptionsWrapper<SynchronisationConfiguration>(config));
     }
 }

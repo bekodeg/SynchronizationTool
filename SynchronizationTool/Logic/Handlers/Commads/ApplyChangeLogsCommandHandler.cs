@@ -131,7 +131,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                     {
                         try
                         {
-                            var entityToDelete = await _dbSynchronizationContext.FindAsync(entityType, new object[] { entityId }, cancellationToken);
+                            var entityToDelete = await _dbSynchronizationContext.FindAsync(entityType, cancellationToken, entityId);
                             if (entityToDelete != null)
                                 _dbSynchronizationContext.Remove(entityToDelete);
                             else
@@ -153,7 +153,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                     object? entity;
                     try
                     {
-                        entity = await _dbSynchronizationContext.FindAsync(entityType, new object[] { entityId }, cancellationToken);
+                        entity = await _dbSynchronizationContext.FindAsync(entityType, cancellationToken, entityId);
                         if (entity == null)
                         {
                             entity = Activator.CreateInstance(entityType)!;
@@ -263,7 +263,8 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                     }
                 }
 
-                await _dbSynchronizationContext.SaveChangesWithoutTrackingAsync(cancellationToken);
+                var saved = await _dbSynchronizationContext.SaveChangesWithoutTrackingAsync(cancellationToken);
+                _logger.LogInformation("Сохранено {Count} изменений в таблице {Table}", saved, table);
                 await transaction.CommitAsync(cancellationToken);
             }
             catch (Exception ex)

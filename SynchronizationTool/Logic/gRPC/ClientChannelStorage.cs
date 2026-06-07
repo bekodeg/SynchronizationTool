@@ -2,6 +2,7 @@
 using Grpc.Net.Compression;
 using SynchronizationTool.Database.Models;
 using System.Collections.Concurrent;
+using System.Net.Security;
 
 namespace SynchronizationTool.Logic.gRPC
 {
@@ -13,8 +14,18 @@ namespace SynchronizationTool.Logic.gRPC
         {
             var channel = _clientChannels.GetOrAdd(synchClient.Id, address =>
             {
+                var handler = new SocketsHttpHandler
+                {
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        RemoteCertificateValidationCallback =
+                    (sender, certificate, chain, errors) => true
+                    }
+                };
+
                 return GrpcChannel.ForAddress(synchClient.Address, new GrpcChannelOptions
                 {
+                    HttpHandler = handler,
                     CompressionProviders = new List<ICompressionProvider>
                     {
                         new GzipCompressionProvider(System.IO.Compression.CompressionLevel.Fastest)

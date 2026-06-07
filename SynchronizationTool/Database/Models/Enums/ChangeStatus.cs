@@ -6,5 +6,4 @@
         Applied = 2,
         Failed = 3
     }
-
 }

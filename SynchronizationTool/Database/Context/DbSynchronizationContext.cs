@@ -18,7 +18,7 @@ namespace SynchronizationTool.Database.Context
             _mediator = mediator;
         }
 
-        public DbSynchronizationContext(DbContextOptions options, IMediator mediator, SynchronisationConfiguration synchronisationConfiguration)
+        public DbSynchronizationContext(DbContextOptions options, IMediator mediator)
             : base(options)
         {
             _mediator = mediator;
@@ -71,5 +71,15 @@ namespace SynchronizationTool.Database.Context
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
             => await Database.BeginTransactionAsync(cancellationToken);
+
+        public IEnumerable<IEntityType> GetEntityTypes()
+        {
+            return Model.GetEntityTypes();
+        }
+
+        public ValueTask<object?> FindAsync(Type type, CancellationToken cancellationToken, params object[] keys)
+        {
+            return base.FindAsync(type, keys, cancellationToken);
+        }
     }
 }

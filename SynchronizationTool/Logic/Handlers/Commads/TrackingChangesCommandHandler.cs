@@ -17,7 +17,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
         ISynchronizationToolContext synchronizationToolContext
         ) : AbstractCommandHandler<TrackingChangesCommand>(logger)
     {
-        private readonly SynchronisationConfiguration config = config.Value;
+        private readonly SynchronisationConfiguration _config = config.Value;
         private readonly ISynchronizationToolContext _synchronizationToolContext = synchronizationToolContext;
 
         public override async Task<ResponseModel> HandleAsync(TrackingChangesCommand request, CancellationToken cancellationToken)
@@ -62,8 +62,8 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                     Status = ChangeStatus.Pending,
                     EntityId = syncEntity.Id,
                     RowId = (Guid)entityIdValue,
-                    ClientId = config.ClientId,
-                    ClientVersion = config.CurrentClientVersion,
+                    ClientId = _config.ClientId,
+                    ClientVersion = _config.CurrentClientVersion,
                     Changes = new List<Change>()
                 };
 

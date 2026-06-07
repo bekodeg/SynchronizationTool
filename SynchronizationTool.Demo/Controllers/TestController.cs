@@ -20,11 +20,23 @@ namespace SynchronizationTool.Demo.Controllers
         }
 
         [HttpPost("synch")]
-        public async Task<IActionResult> ApplyChangeLogsFromBody(Guid clientId)
+        public async Task<IActionResult> SynchChangeLogs(Guid clientId)
         {
             var command = new SynchChangeLogCommand()
             {
                 ClientId = clientId
+            };
+
+            await _mediator.Send(command);
+
+            return Ok();
+        }
+
+        [HttpPost("apply")]
+        public async Task<IActionResult> ApplyChangeLogs()
+        {
+            var command = new ApplyChangeLogsCommand()
+            {
             };
 
             await _mediator.Send(command);

@@ -66,7 +66,7 @@ namespace SynchronizationTool.Logic.Handlers.Commads
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (lastSentLog != null)
-                client.LastChangeLog = lastSentLog;
+                client.LastChangeLogId = lastSentLog.Id;
 
             await _synchronizationToolContext.SaveChangesAsync(cancellationToken);
 

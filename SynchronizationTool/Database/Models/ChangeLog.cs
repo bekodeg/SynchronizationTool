@@ -17,7 +17,6 @@ namespace SynchronizationTool.Database.Models
         public int ClientVersion { get; set; }
 
         public Entity Entity { get; set; } = null!;
-        public SynchClient SynchClient { get; set; } = null!;
         public ICollection<Change> Changes { get; set; } = [];
         //public ICollection<ChangeLogConflict> ChangeLogConflicts { get; set; }
     }

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using NLog.Extensions.Logging;
 using SynchronizationTool.Configuration;
@@ -7,15 +9,24 @@ using SynchronizationTool.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // ѕорт, на котором будет работать gRPC (например, 5000)
+    options.ListenAnyIP(8080, listenOptions => {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+        listenOptions.UseHttps("/app/certs/server.pfx", "YourPassword123");
+    }); 
+});
+
 builder.Configuration.AddJsonFile("LoggingConfiguration.json");
 var nLogConfig = new NLogLoggingConfiguration(builder.Configuration.GetSection("NLog"));
 
 builder.Logging.ClearProviders();
 builder.Services.AddLogging(m => m.AddNLog(nLogConfig));
 
-builder.Services.AddSynchronisation<DbSynchronizationContext>(builder.Configuration);
+builder.Services.AddSynchronisation<DemoContext>(builder.Configuration);
 
-builder.Services.AddDbContext<DbSynchronizationContext, DemoContext>((sp, options) =>
+builder.Services.AddDbContext<DemoContext>((sp, options) =>
 {
     var dbTypeStr = Environment.GetEnvironmentVariable("DATABASE_TYPE");
 
@@ -57,10 +68,12 @@ builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
 var app = builder.Build();
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.MapControllers();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapSynchronisation();
 
 app.Run();

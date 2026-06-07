@@ -9,10 +9,6 @@ namespace SynchronizationTool.Database.Models
         [Required]
         public string Address { get; set; } = null!;
 
-        public List<ChangeLog> ChangeLogs { get; init; } = [];
-
         public Guid? LastChangeLogId { get; set; }
-
-        public ChangeLog? LastChangeLog { get; set; } 
     }
 }

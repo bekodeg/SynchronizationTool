@@ -1,9 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Context;
-using SynchronizationTool.Demo.Database.Models;
 
 namespace SynchronizationTool.Demo.Database.Context
 {
@@ -11,10 +8,10 @@ namespace SynchronizationTool.Demo.Database.Context
     {
         public DemoContext(
             DbContextOptions<DemoContext> options,
-            IMediator mediator,
-            IOptions<SynchronisationConfiguration> synchronisationConfiguration)
-            : base(options, mediator, synchronisationConfiguration.Value)
+            IMediator mediator)
+            : base(options, mediator)
         {
+           // Database.Migrate();
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder)

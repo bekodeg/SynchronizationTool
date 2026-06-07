@@ -5,5 +5,7 @@
         public Guid ClientId { get; init; } = Guid.NewGuid();
 
         public int CurrentClientVersion { get; init; } = 1;
+
+        public string SynchronisationSchema { get; init; } = "sync";
     }
 }

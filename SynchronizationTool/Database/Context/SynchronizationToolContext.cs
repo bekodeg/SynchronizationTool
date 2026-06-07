@@ -1,18 +1,27 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Models;
 
 namespace SynchronizationTool.Database.Context
 {
     public partial class SynchronizationToolContext : DbContext, ISynchronizationToolContext
     {
-        public SynchronizationToolContext()
+        private readonly SynchronisationConfiguration _configuration;
+        
+        public SynchronizationToolContext(IOptions<SynchronisationConfiguration> configuration)
             : base()
         {
+            _configuration = configuration.Value;
         }
+
         public SynchronizationToolContext(
-            DbContextOptions options, bool migrate = true)
+            DbContextOptions<SynchronizationToolContext> options, 
+            IOptions<SynchronisationConfiguration> configuration,
+            bool migrate = true)
             : base(options)
         {
+            _configuration = configuration.Value;
             if (migrate)
             {
                 Database.Migrate();
@@ -32,6 +41,8 @@ namespace SynchronizationTool.Database.Context
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.HasDefaultSchema(_configuration.SynchronisationSchema);
+          
             // Конфигурация таблиц синхронизации
             modelBuilder.Entity<Entity>(entity =>
             {
@@ -47,9 +58,6 @@ namespace SynchronizationTool.Database.Context
                 log.HasOne(l => l.Entity)
                    .WithMany(e => e.ChangeLogs)
                    .HasForeignKey(l => l.EntityId);
-                log.HasOne(l => l.SynchClient)
-                   .WithMany(c => c.ChangeLogs)
-                   .HasForeignKey(l => l.ClientId);
             });
 
             modelBuilder.Entity<Change>(change =>
@@ -67,8 +75,6 @@ namespace SynchronizationTool.Database.Context
                 client.ToTable("SynchClient");
                 client.HasKey(c => c.Id);
                 client.Property(c => c.LastChangeLogId);
-                client.HasOne(c => c.LastChangeLog)
-                      .WithOne();
             });
         }
     }

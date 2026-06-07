@@ -14,7 +14,7 @@ namespace SynchronizationTool.Database.Context
 
         EntityEntry Entry(object entity);
 
-        ValueTask<object?> FindAsync(Type type, params object[] keys);
+        ValueTask<object?> FindAsync(Type type, CancellationToken cancellationToken, params object[] keys);
 
         EntityEntry Remove(object entity);
 
@@ -25,5 +25,7 @@ namespace SynchronizationTool.Database.Context
         Task<int> SaveChangesWithoutTrackingAsync(CancellationToken cancellationToken = default);
 
         Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+        IEnumerable<IEntityType> GetEntityTypes();
     }
 }

@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Protos;
 using SynchronizationTool.Database.Context;
+using SynchronizationTool.Database.Models;
 using SynchronizationTool.Logic.gRPC;
 using SynchronizationTool.Logic.Models;
 using SynchronizationTool.Logic.Models.Queries;
-using static Protos.SynchronisationService;
 
 namespace SynchronizationTool.Logic.Handlers.Queries
 {
@@ -22,16 +22,16 @@ namespace SynchronizationTool.Logic.Handlers.Queries
         public override async Task<ResponseModel<ChangeBucket>> HandleAsync(ChangeLogQuery request, CancellationToken cancellationToken)
         {
             var client = await _synchronizationToolContext.SynchClients
-                .Include(s => s.LastChangeLogId)
                 .FirstOrDefaultAsync(c => c.Id == request.ClientId, cancellationToken);
 
             var changeLogsTask = _synchronizationToolContext.ChangeLogs
+                .Include(c => c.Changes)
                 .Where(cl => cl.ClientId != request.ClientId);
             
-            if (client!.LastChangeLog is not null)
+            if (client?.LastChangeLogId is not null)
             {
                 changeLogsTask = changeLogsTask
-                    .Where(cl => cl.DateTime > client.LastChangeLog.DateTime);
+                    .Where(cl => cl.DateTime > _synchronizationToolContext.ChangeLogs.Find(client.LastChangeLogId)!.DateTime);
             }
 
             var changelogs = await changeLogsTask.ToListAsync(cancellationToken);
@@ -52,7 +52,7 @@ namespace SynchronizationTool.Logic.Handlers.Queries
                 {
                     Id = cl.Id.ToString(),
                     ClientId = cl.ClientId.ToString(),
-                    DateTime = Timestamp.FromDateTime(cl.DateTime),
+                    DateTime = Timestamp.FromDateTime(DateTime.SpecifyKind(cl.DateTime, DateTimeKind.Utc)),
                     Type = (int)cl.Type,
                     EntityId = cl.RowId.ToString(),
                     TableId = cl.EntityId.ToString(),

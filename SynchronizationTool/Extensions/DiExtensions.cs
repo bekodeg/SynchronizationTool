@@ -1,9 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SynchronizationTool.Configuration;
 using SynchronizationTool.Database.Context;
 using SynchronizationTool.Logic.gRPC;
-using Microsoft.EntityFrameworkCore;
+using SynchronizationTool.Logic.Services;
+using System.Runtime.CompilerServices;
 
 namespace SynchronizationTool.Extensions
 {
@@ -21,9 +26,16 @@ namespace SynchronizationTool.Extensions
             if (!string.IsNullOrWhiteSpace(configFild)){
                 synchConfigurationSection[nameof(SynchronisationConfiguration.ClientId)] = configFild;
             }
+
             configFild = Environment.GetEnvironmentVariable("SYNCH_CLIENT_VERSION");
             if (!string.IsNullOrWhiteSpace(configFild)){
                 synchConfigurationSection[nameof(SynchronisationConfiguration.CurrentClientVersion)] = configFild;
+            }
+
+            configFild = Environment.GetEnvironmentVariable("SYNCH_DATABASE_SCHEMA");
+            if (!string.IsNullOrWhiteSpace(configFild))
+            {
+                synchConfigurationSection[nameof(SynchronisationConfiguration.SynchronisationSchema)] = configFild;
             }
 
             services.Configure<SynchronisationConfiguration>(synchConfigurationSection);
@@ -31,6 +43,8 @@ namespace SynchronizationTool.Extensions
             services.AddScoped<IDbSynchronizationContext, TSynchContext>();
             services.AddDbContext<ISynchronizationToolContext, SynchronizationToolContext>((sp, options) =>
             {
+                var config = sp.GetRequiredService<IOptions<SynchronisationConfiguration>>().Value;
+
                 var dbTypeStr = Environment.GetEnvironmentVariable("SYNCH_DATABASE_TYPE");
 
                 if (string.IsNullOrEmpty(dbTypeStr))
@@ -51,12 +65,19 @@ namespace SynchronizationTool.Extensions
                 {
                     case DatabaseType.SQLite:
                         options.UseSqlite(connectionString);
+
                         break;
                     case DatabaseType.MSSQL:
-                        options.UseSqlServer(connectionString);
+                        options.UseSqlServer(connectionString, opt =>
+                        {
+                            opt.MigrationsHistoryTable("__EFMigrationsHistory", config.SynchronisationSchema);
+                        });
                         break;
                     case DatabaseType.Postgres:
-                        options.UseNpgsql(connectionString);
+                        options.UseNpgsql(connectionString, opt =>
+                        {
+                            opt.MigrationsHistoryTable("__EFMigrationsHistory", config.SynchronisationSchema);
+                        });
                         break;
                 }
             });
@@ -64,8 +85,23 @@ namespace SynchronizationTool.Extensions
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DbSynchronizationContext).Assembly));
 
             services.AddSingleton<IClientChannelStorage, ClientChannelStorage>();
+            
+            // gRPC
+            services.AddGrpc();
+            services.AddScoped<SynchronisationInterface>();
+
+            // Hosted services
+            services.AddHostedService<SynchronizedTablesSeeder>();
 
             return services;
+        }
+
+
+        public static IEndpointRouteBuilder MapSynchronisation(this IEndpointRouteBuilder app)
+        {
+            app.MapGrpcService<SynchronisationInterface>();
+
+            return app;
         }
     }
 }
